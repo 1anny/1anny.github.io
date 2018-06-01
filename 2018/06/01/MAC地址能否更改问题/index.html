@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+  
+  
+  <link rel="stylesheet" media="all" href="/lib/Han/dist/han.min.css?v=3.3">
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="计算机网络,MAC," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="摘要：MAC地址全球唯一为什么还可以修改  首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。 上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址">
+<meta name="keywords" content="计算机网络,MAC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MAC地址能否更改问题">
+<meta property="og:url" content="http://yoursite.com/2018/06/01/MAC地址能否更改问题/index.html">
+<meta property="og:site_name" content="1anny&#39;s blog">
+<meta property="og:description" content="摘要：MAC地址全球唯一为什么还可以修改  首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。 上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://img7.ph.126.net/n_hS-GjlG3c0V4SAz0hrng==/6597552452261464357.jpg">
+<meta property="og:updated_time" content="2018-06-01T13:23:32.386Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="MAC地址能否更改问题">
+<meta name="twitter:description" content="摘要：MAC地址全球唯一为什么还可以修改  首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。 上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址">
+<meta name="twitter:image" content="http://img7.ph.126.net/n_hS-GjlG3c0V4SAz0hrng==/6597552452261464357.jpg">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":24,"b2t":true,"scrollpercent":true,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/06/01/MAC地址能否更改问题/"/>
+
+
+
+
+
+  <title>MAC地址能否更改问题 | 1anny's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">1anny's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle">1an</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/06/01/MAC地址能否更改问题/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="1anny">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/images/avatar.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="1anny's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">MAC地址能否更改问题</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-06-01T20:56:40+08:00">
+                2018-06-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/计算机网络/" itemprop="url" rel="index">
+                    <span itemprop="name">计算机网络</span>
+                  </a>
+                </span>
+
+                
+                
+                  ， 
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/计算机网络/笔记/" itemprop="url" rel="index">
+                    <span itemprop="name">笔记</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body han-init-context" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>摘要：MAC地址全球唯一为什么还可以修改</strong></p>
+<hr>
+<h2 id="首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。"><a href="#首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。" class="headerlink" title="首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。"></a>首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。</h2><p><img src="http://img7.ph.126.net/n_hS-GjlG3c0V4SAz0hrng==/6597552452261464357.jpg" alt=""></p>
+<h3 id="上面我们看到arp-s-10-10-0-8-00-00-00-00-00-00-把本机MAC地址更改为00-00-00-00-00-00"><a href="#上面我们看到arp-s-10-10-0-8-00-00-00-00-00-00-把本机MAC地址更改为00-00-00-00-00-00" class="headerlink" title="上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00"></a>上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00</h3><h3 id="ARP缓存表中的MAC地址是这个，但是ipconfig-all中的physical-address物理地址还是原来的，这个体ipconfig-all查看的是网卡中的MAC地址，而arp-a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。"><a href="#ARP缓存表中的MAC地址是这个，但是ipconfig-all中的physical-address物理地址还是原来的，这个体ipconfig-all查看的是网卡中的MAC地址，而arp-a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。" class="headerlink" title="ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址还是原来的，这个体ipconfig /all查看的是网卡中的MAC地址，而arp /a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。"></a>ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址还是原来的，这个体ipconfig /all查看的是网卡中的MAC地址，而arp /a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。</h3><hr>
+<h2 id="MAC地址是唯一的-但是网卡毕竟是个硬件-需要软件来支撑-即操作系统来识别-而将操作系统识别出来的MAC地址是可以更改的-它只不过是一个字符串"><a href="#MAC地址是唯一的-但是网卡毕竟是个硬件-需要软件来支撑-即操作系统来识别-而将操作系统识别出来的MAC地址是可以更改的-它只不过是一个字符串" class="headerlink" title="MAC地址是唯一的,但是网卡毕竟是个硬件,需要软件来支撑,即操作系统来识别.而将操作系统识别出来的MAC地址是可以更改的,它只不过是一个字符串."></a><strong>MAC地址是唯一的,但是网卡毕竟是个硬件,需要软件来支撑,即操作系统来识别.而将操作系统识别出来的MAC地址是可以更改的,它只不过是一个字符串.</strong></h2><h3 id="MAC地址后如果是单机的话就没什么问题-若是联网的话-就会出现问题了-同一个局域网内若是基线器连接的话-IP和MAC都可以改为一样的-这样可以共用一个IP帐号上网-网络设置要合理-但是局域网内部这两台主机之间是不能再相互访问了-若是在不同的子网中出现了相同的MAC地址-只要他们的数据包不经过同一个数据链路层-需要计算机网络专业知识才懂-也不会出问题。"><a href="#MAC地址后如果是单机的话就没什么问题-若是联网的话-就会出现问题了-同一个局域网内若是基线器连接的话-IP和MAC都可以改为一样的-这样可以共用一个IP帐号上网-网络设置要合理-但是局域网内部这两台主机之间是不能再相互访问了-若是在不同的子网中出现了相同的MAC地址-只要他们的数据包不经过同一个数据链路层-需要计算机网络专业知识才懂-也不会出问题。" class="headerlink" title="MAC地址后如果是单机的话就没什么问题.若是联网的话,就会出现问题了. 同一个局域网内若是基线器连接的话,IP和MAC都可以改为一样的,这样可以共用一个IP帐号上网(网络设置要合理),但是局域网内部这两台主机之间是不能再相互访问了. 若是在不同的子网中出现了相同的MAC地址,只要他们的数据包不经过同一个数据链路层(需要计算机网络专业知识才懂)也不会出问题。"></a>MAC地址后如果是单机的话就没什么问题.若是联网的话,就会出现问题了. 同一个局域网内若是基线器连接的话,IP和MAC都可以改为一样的,这样可以共用一个IP帐号上网(网络设置要合理),但是局域网内部这两台主机之间是不能再相互访问了. 若是在<strong>不同的子网</strong>中出现了相同的MAC地址,只要他们的数据包不经过同一个数据链路层(需要计算机网络专业知识才懂)也不会出问题。</h3><hr>
+<h3 id="修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows-9x中修改：打开注册表编辑器，在HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSetService-Class-Net-下的0000，0001，0002。"><a href="#修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows-9x中修改：打开注册表编辑器，在HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSetService-Class-Net-下的0000，0001，0002。" class="headerlink" title="修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows 9x中修改：打开注册表编辑器，在HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSetService\Class\Net\下的0000，0001，0002。"></a>修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows 9x中修改：打开注册表编辑器，在HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSetService\Class\Net\下的0000，0001，0002。</h3><h3 id="Windows-2000-XP中的修改：同样打开注册表编辑器，HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSet-ControlClass-4D36E970-E325-11CE-BFC1-08002BE10318-中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405"><a href="#Windows-2000-XP中的修改：同样打开注册表编辑器，HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSet-ControlClass-4D36E970-E325-11CE-BFC1-08002BE10318-中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405" class="headerlink" title="Windows 2000/XP中的修改：同样打开注册表编辑器，HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ControlClass\4D36E970-E325-11CE-BFC1-08002BE10318 中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405"></a>Windows 2000/XP中的修改：同样打开注册表编辑器，HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ControlClass\4D36E970-E325-11CE-BFC1-08002BE10318 中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405</h3><h3 id="当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情见此）"><a href="#当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情见此）" class="headerlink" title="当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情见此）"></a>当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情<a href="https://jingyan.baidu.com/article/2f9b480d6c8acd41cb6cc284.html" target="_blank" rel="noopener">见此</a>）</h3><hr>
+<p>本文转载自：<a href="https://blog.csdn.net/u014722754/article/details/45032111" target="_blank" rel="noopener">https://blog.csdn.net/u014722754/article/details/45032111</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/计算机网络/" rel="tag"># 计算机网络</a>
+          
+            <a href="/tags/MAC/" rel="tag"># MAC</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/04/12/计算机网络-应用层总结(一)/" rel="next" title="计算机网络-应用层总结(一)">
+                <i class="fa fa-chevron-left"></i> 计算机网络-应用层总结(一)
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="/images/avatar.jpg"
+                alt="1anny" />
+            
+              <p class="site-author-name" itemprop="name">1anny</p>
+              <p class="site-description motion-element" itemprop="description">一些学习笔记及搜集的文章</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">分类</span>
+                
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/1anny" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。"><span class="nav-number">1.</span> <span class="nav-text">首先我们要声明的是我们认识的“MAC地址的更改”不是更改网卡中的MAC，而是更改ARP缓存表中的MAC地址。</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#上面我们看到arp-s-10-10-0-8-00-00-00-00-00-00-把本机MAC地址更改为00-00-00-00-00-00"><span class="nav-number">1.1.</span> <span class="nav-text">上面我们看到arp -s 10.10.0.8 00-00-00-00-00-00 把本机MAC地址更改为00-00-00-00-00-00</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ARP缓存表中的MAC地址是这个，但是ipconfig-all中的physical-address物理地址还是原来的，这个体ipconfig-all查看的是网卡中的MAC地址，而arp-a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。"><span class="nav-number">1.2.</span> <span class="nav-text">ARP缓存表中的MAC地址是这个，但是ipconfig /all中的physical address物理地址还是原来的，这个体ipconfig /all查看的是网卡中的MAC地址，而arp /a是查看arp缓存表中的mac地址，同样，通过本地连接更改MAC地址还只是更改ARP缓存表中的MAC地址。</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MAC地址是唯一的-但是网卡毕竟是个硬件-需要软件来支撑-即操作系统来识别-而将操作系统识别出来的MAC地址是可以更改的-它只不过是一个字符串"><span class="nav-number">2.</span> <span class="nav-text">MAC地址是唯一的,但是网卡毕竟是个硬件,需要软件来支撑,即操作系统来识别.而将操作系统识别出来的MAC地址是可以更改的,它只不过是一个字符串.</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#MAC地址后如果是单机的话就没什么问题-若是联网的话-就会出现问题了-同一个局域网内若是基线器连接的话-IP和MAC都可以改为一样的-这样可以共用一个IP帐号上网-网络设置要合理-但是局域网内部这两台主机之间是不能再相互访问了-若是在不同的子网中出现了相同的MAC地址-只要他们的数据包不经过同一个数据链路层-需要计算机网络专业知识才懂-也不会出问题。"><span class="nav-number">2.1.</span> <span class="nav-text">MAC地址后如果是单机的话就没什么问题.若是联网的话,就会出现问题了. 同一个局域网内若是基线器连接的话,IP和MAC都可以改为一样的,这样可以共用一个IP帐号上网(网络设置要合理),但是局域网内部这两台主机之间是不能再相互访问了. 若是在不同的子网中出现了相同的MAC地址,只要他们的数据包不经过同一个数据链路层(需要计算机网络专业知识才懂)也不会出问题。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows-9x中修改：打开注册表编辑器，在HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSetService-Class-Net-下的0000，0001，0002。"><span class="nav-number">2.2.</span> <span class="nav-text">修改自己的MAC地址有两种方法，一种是硬件修改，另外一种是软件修改。硬件的方法就是直接对网卡进行操作，修改保存在网卡的EPROM里面的MAC地址，通过网卡生产厂家提供的修改程序可以更改存储器里的地址。那么什么叫做EPROM呢？EPROM是电子学中一种存储器的专业术语，它是可擦写的，也就是说一张白纸你用钢笔写了一遍以后就不能再用橡皮擦去了，而EPROM这张白纸用铅笔写后可以再擦去，可以反复改变其中数据的存储器。当然软件修改的方法就相对来说要简单得多了，在Windows中，网卡的MAC保存在注册表中，实际使用也是从注册表中提取的，所以只要修改注册表就可以改变MAC。Windows 9x中修改：打开注册表编辑器，在HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSetService\Class\Net\下的0000，0001，0002。</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Windows-2000-XP中的修改：同样打开注册表编辑器，HKEY-LOCAL-MACHINE-SYSTEM-CurrentControlSet-ControlClass-4D36E970-E325-11CE-BFC1-08002BE10318-中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405"><span class="nav-number">2.3.</span> <span class="nav-text">Windows 2000/XP中的修改：同样打开注册表编辑器，HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\ControlClass\4D36E970-E325-11CE-BFC1-08002BE10318 中的0000，0001，0002中的DriverDesc，如果在0000找到，就在0000下面添加字符串变量，命名为“NetworkAddress”，值为要设置的MAC地址，例如：000102030405</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情见此）"><span class="nav-number">2.4.</span> <span class="nav-text">当成在本地连接属性中修改与在DOS中修改，注册表也就会相应的自动改变，与注册表修改是等效的。（详情见此）</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+        <div class="back-to-top">
+          <i class="fa fa-arrow-up"></i>
+          
+            <span id="scrollpercent"><span>0</span>%</span>
+          
+        </div>
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <script async src="https://dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">1anny</span>
+
+  
+</div>
+
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_uv"></span>
+</span>
+</div>
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
